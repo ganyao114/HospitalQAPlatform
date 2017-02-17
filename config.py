@@ -24,6 +24,7 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql:abc'
+
 config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
