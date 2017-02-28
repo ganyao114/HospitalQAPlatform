@@ -1,3 +1,4 @@
+import browsepy
 from flask import Flask
 
 from app import creat_app
@@ -5,3 +6,4 @@ from app import creat_app
 
 if __name__ == '__main__':
     creat_app('development').run()
+    browsepy.app.run()

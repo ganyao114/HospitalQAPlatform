@@ -1,4 +1,3 @@
-
 class PrivateExc(Exception):
     def __init__(self,name):
         print 'par---' + name + '---is private!'

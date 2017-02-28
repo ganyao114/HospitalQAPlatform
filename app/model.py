@@ -1,4 +1,5 @@
 from flask.ext.login import UserMixin
+from werkzeug.security import check_password_hash
 
 from app import DB
 from app.lib.utils import Privacy
@@ -17,3 +18,5 @@ class User(UserMixin, DB.Model, Privacy):
     login_name = DB.Column(DB.String(128), unique = True, index = True)
     password_hash = DB.Column(DB.String(128))
     email = DB.Column(DB.String(64),unique = True,index = True)
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)

@@ -25,4 +25,7 @@ def creat_app(config_name):
     from .admin import admin as admin_blueprint
     app.register_blueprint(admin_blueprint)
 
+    from .codeview import codeview as codeview_blueprint
+    app.register_blueprint(codeview_blueprint)
+
     return app

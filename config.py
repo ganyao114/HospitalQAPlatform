@@ -1,9 +1,9 @@
 import os
 
 class Domain:
-    INDEX = 'index'
-    USER = 'user'
-    ADMIN = 'admin'
+    INDEX = '/index'
+    USER = '/user'
+    ADMIN = '/admin'
 
 
 class Config:
