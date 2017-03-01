@@ -92,7 +92,7 @@ def check_path(path):
         return True
 
 def genarate_path(home, path):
-    return os.path.join(home, path)
+    return os.path.abspath(home + path)
 
 def file_extension(name):
     return name.split('.')[-1]
@@ -219,14 +219,18 @@ class IFileOperator:
     def get_files_in_folder(self, path):
         pass
 
-
 class CommonFileOperator(IFileOperator):
 
     def readable(self, path):
-        pass
+        return is_readable(path)
 
     def get_file(self, path):
-        return open(path)
+        file = None
+        try:
+            file = open(path)
+        except IOError as e:
+            print e
+        return file
 
     def copy_file(self, path_from, path_to):
         pass
@@ -241,7 +245,23 @@ class CommonFileOperator(IFileOperator):
         pass
 
     def get_dir_info(self, path):
-        pass
+        try:
+            return {
+                'id': '/' + os.path.basename(path) + '/',
+                'type': 'folder',
+                'attributes': {
+                    'name':os.path.basename(path),
+                    'path': None, # can not ret real path
+                    'readable': 1 if self.readable(path) else 0,
+                    'writable': 1 if self.writable(path) else 0,
+                    'created': time.ctime(os.path.getctime(path)),
+                    'modified': time.ctime(os.path.getmtime(path)),
+                    'timestamp': int(os.path.getctime(path)),
+                }
+            }
+        except Exception as e:
+            print e
+        return None
 
     def is_dir(self, path):
         try:
@@ -253,30 +273,32 @@ class CommonFileOperator(IFileOperator):
         try:
             paths = []
             for filename in os.listdir(path):
-                paths.append(os.path.join('%s%s' % (path, filename)).decode('gbk'))
+                paths.append(os.path.join(path, filename).decode('gbk'))
             return paths
         except:
             return None
 
     def get_file_info(self, path):
-        with self.get_file(path) as file:
+        try:
             return {
-                'id':'/' + file.name,
-                'type':'.' + file_extension(file.name),
+                'id':'/' + os.path.basename(path),
+                'type':'.' + file_extension(os.path.basename(path)),
                 'attributes': {
-                    'name':file.name,
-                    'extension': file_extension(file.name),
+                    'name':os.path.basename(path),
+                    'extension': file_extension(os.path.basename(path)),
                     'path': None, # can not ret real path
-                    "readable": 1 if self.readable(path) else 0,
-                    "writable": 1 if self.writable(path) else 0,
-                    "created": time.ctime(os.path.getctime(path)),
-                    "modified": time.ctime(os.path.getmtime(path)),
-                    "timestamp": int(os.path.getctime(path)),
-                    "height": 0,
-                    "width": 0,
-                    "size": self.get_file_size(path)
+                    'readable': 1 if self.readable(path) else 0,
+                    'writable': 1 if self.writable(path) else 0,
+                    'created': time.ctime(os.path.getctime(path)),
+                    'modified': time.ctime(os.path.getmtime(path)),
+                    'timestamp': int(os.path.getctime(path)),
+                    'height': 0,
+                    'width': 0,
+                    'size': self.get_file_size(path)
                 }
             }
+        except Exception as e:
+            print e
         return None
 
     def writable(self, path):
@@ -307,26 +329,29 @@ class FileManager(IFileManager):
         return json.dumps(init_ret)
 
     def getfolder(self, path):
+        if path[-1:] == '/':
+            path = path[:-1]
         folder_path = genarate_path(self.private_path, path)
         file_infos = []
-        with open(folder_path) as dir_file:
-            isdir = self.file_operator.is_dir(folder_path)
-            if isdir == None:
-                pass
-            elif isdir:
-                file_paths = self.file_operator.get_files_in_folder(folder_path)
-                if file_paths != None:
-                    for file_path in file_paths:
-                        if self.file_operator.is_dir(file_path):
-                            file_info = self.file_operator.get_file_info(file_path)
-                            if file_info != None:
-                                file_info['path'] = genarate_path(path, file_info['attributes']['name'])
-                                file_infos.append(file_info)
-                        else:
-                            file_infos.append(self.file_operator.get_dir_info(file))
-                    return json.dumps({'data': file_infos})
-        return json.dumps({})
-
+        isdir = self.file_operator.is_dir(folder_path)
+        if isdir == None:
+            pass
+        elif isdir:
+            file_paths = self.file_operator.get_files_in_folder(folder_path)
+            if file_paths != None:
+                for file_path in file_paths:
+                    if not self.file_operator.is_dir(file_path):
+                        file_info = self.file_operator.get_file_info(file_path)
+                        if file_info != None:
+                            file_info['attributes']['path'] = path + file_info['id']
+                            file_infos.append(file_info)
+                    else:
+                        folder_info = self.file_operator.get_dir_info(file_path)
+                        if folder_info != None:
+                            folder_info['attributes']['path'] = path + folder_info['id']
+                            file_infos.append(folder_info)
+                return json.dumps({'data': file_infos})
+        return json.dumps({'data': ''})
     def rename(self, old_path, new_path):
         pass
 
