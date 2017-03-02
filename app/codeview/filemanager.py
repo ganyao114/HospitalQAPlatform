@@ -16,15 +16,50 @@ init_ret = {
         "attributes": {
             "config": {
                 "options": {
-                    "culture": "ru",
+                    "culture": "zh-cn",
+                    'overrideClientConfig':False
                 },
                 "security": {
                     "allowFolderDownload": True,
+                    'editRestrictions': [
+                        "txt",
+                        "csv",
+                        "md",
+                        "c",
+                        "h",
+                        "cpp",
+                        "xml",
+                        "json",
+                        "smali",
+                        "java"
+                    ]
                 },
                 "upload": {
                     "chunkSize": 10000000,
                 }
             }
+        }
+    }
+}
+
+
+editfile = {
+    "data":{
+        "id":"/My_folder/llalalalala/demo.txt",
+        "type":"file",
+        "attributes":{
+            "name":"demo.txt",
+            "extension":"txt",
+            "path":"/userfiles/My_folder/llalalalala/demo.txt",
+            "readable":1,
+            "writable":1,
+            "created":"",
+            "modified":"02 Mar 2017 06:53",
+            "timestamp":1488437617,
+            "height":0,
+            "width":0,
+            "size":"8",
+            "content":"dawdwdad"
         }
     }
 }
@@ -219,6 +254,10 @@ class IFileOperator:
     def get_files_in_folder(self, path):
         pass
 
+    @abstractmethod
+    def read_doc(self, path):
+        pass
+
 class CommonFileOperator(IFileOperator):
 
     def readable(self, path):
@@ -282,7 +321,7 @@ class CommonFileOperator(IFileOperator):
         try:
             return {
                 'id':'/' + os.path.basename(path),
-                'type':'.' + file_extension(os.path.basename(path)),
+                'type':'file',
                 'attributes': {
                     'name':os.path.basename(path),
                     'extension': file_extension(os.path.basename(path)),
@@ -300,6 +339,10 @@ class CommonFileOperator(IFileOperator):
         except Exception as e:
             print e
         return None
+
+    def read_doc(self, path):
+        with self.get_file(path) as file:
+            return file.read()
 
     def writable(self, path):
         return is_writeable(path, True)
@@ -344,16 +387,31 @@ class FileManager(IFileManager):
                         file_info = self.file_operator.get_file_info(file_path)
                         if file_info != None:
                             file_info['attributes']['path'] = path + file_info['id']
+                            file_info['id'] = file_info['attributes']['path']
                             file_infos.append(file_info)
                     else:
                         folder_info = self.file_operator.get_dir_info(file_path)
                         if folder_info != None:
                             folder_info['attributes']['path'] = path + folder_info['id']
+                            folder_info['id'] = folder_info['attributes']['path']
                             file_infos.append(folder_info)
                 return json.dumps({'data': file_infos})
         return json.dumps({'data': ''})
     def rename(self, old_path, new_path):
         pass
+
+    def readfile(self, path):
+        if path[-1:] == '/':
+            path = path[:-1]
+        file_path = genarate_path(self.private_path, path)
+        content = self.file_operator.read_doc(file_path)
+        file_info = self.file_operator.get_file_info(file_path)
+        if file_info != None:
+            file_info['attributes']['path'] = path + file_info['id']
+            file_info['id'] = file_info['attributes']['path']
+            file_info['attributes']['content'] = content
+            return json.dumps({'data': file_info})
+
 
     @staticmethod
     def dispatch_request(filemanager, pars):
@@ -365,6 +423,8 @@ class FileManager(IFileManager):
                 return filemanager.getfolder(pars['path'])
             elif mode == 'rename':
                 return filemanager.rename(pars['old'], pars['new'])
+            elif mode == 'editfile':
+                return filemanager.readfile(pars['path'])
             else:
                 pass
 

@@ -3836,6 +3836,18 @@ $.richFilemanagerPlugin = function(element, pluginOptions)
 				currentMode = 'shell';
 			}
 
+			if (extension === 'java') {
+                assets.push('/scripts/CodeMirror/addon/mode/overlay.js');
+                assets.push('/scripts/CodeMirror/mode/markdown/markdown.js');
+                assets.push('/scripts/CodeMirror/mode/gfm/gfm.js');
+                assets.push('/scripts/CodeMirror/mode/javascript/javascript.js');
+                assets.push('/scripts/CodeMirror/mode/css/css.js');
+                assets.push('/scripts/CodeMirror/mode/htmlmixed/htmlmixed.js');
+                assets.push('/scripts/CodeMirror/mode/clike/clike.js');
+                assets.push('/scripts/CodeMirror/mode/meta.js');
+				currentMode = 'text/x-java';
+			}
+
 		}
 
         if(assets.length) {
@@ -3862,7 +3874,6 @@ $.richFilemanagerPlugin = function(element, pluginOptions)
                     }
                 }
             });
-
             // setup "mode"
             editor.setOption("mode", currentMode);
 
